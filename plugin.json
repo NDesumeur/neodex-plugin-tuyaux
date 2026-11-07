@@ -1,0 +1,22 @@
+{
+  "id": "neodex.tuyaux",
+  "name": "Tuyaux",
+  "version": "1.0.0",
+  "author": "NDesumeur",
+  "description": "Tourne les tuyaux pour amener l'eau du château d'eau jusqu'à toutes les maisons du quartier.",
+  "icon": "icon.png",
+  "entry": "index.js",
+  "view": "tuyaux",
+  "neobase": ">=4.0.0",
+  "type": "app",
+  "category": "Jeux",
+  "syncMode": "progression",
+  "syncInfo": "Niveau atteint, étoiles.",
+  "mobile": false,
+  "system": false,
+  "dependencies": {},
+  "sdk": "2.1.0",
+  "permissions": [
+    "storage"
+  ]
+}
