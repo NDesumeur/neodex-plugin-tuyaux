@@ -1,9 +1,9 @@
 {
   "pluginId": "neodex.tuyaux",
   "repo": "NDesumeur/neodex-plugin-tuyaux",
-  "version": "1.0.0",
-  "sha256": "5d250295932faebe7ba75f2ad14fbc2808116cb2640be322aa4e2c6ed6d463e0",
-  "approvedAt": "2026-11-07T17:30:59.708Z",
+  "version": "1.0.1",
+  "sha256": "f8a7aeebeebaaf01cf964c475a5459da117102e83c766368c3be42755cd42238",
+  "approvedAt": "2026-11-08T12:10:50.873Z",
   "neobase": ">=4.0.0",
-  "signature": "oKu9tmBl0ZCNUsMIUzzyI/f/RQPSSFgbw61bO02eMJA+9e/EYlFiqXU2KiEWSLEkSyqnACTqP8h6Jip3crWeDA=="
+  "signature": "LhfdtEerx+4+9DuMgnzc+IuH8ZvS/WWTThIycfn9vMZzheSCnlZsg1dqugRv1QyFUWO9iH5NbgiBPrAv6lLGBQ=="
 }
