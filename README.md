@@ -1,10 +1,34 @@
 # Tuyaux
 
-Tourne les tuyaux pour amener l'eau du château d'eau jusqu'à toutes les maisons du quartier.
+Un jeu de réflexion : les tuyaux du quartier ont été tournés dans tous les sens. Fais-les pivoter pour que l'eau parte du château d'eau, au centre, et arrive à toutes les maisons.
 
-Chaque niveau est un réseau de tuyaux mélangé. Tourne-les pour que l'eau parte du château d'eau et arrive à chaque maison. Toujours faisable ; les grilles grandissent avec les niveaux.
+*English version: [README.en.md](README.en.md)*
 
-Ses données (records, réglages) sont rangées dans le dossier du plugin, que NeoDex sauvegarde (synchro cloud comprise).
+## Commandes
+
+- **Clic** sur un tuyau : un quart de tour dans le sens des aiguilles d'une montre.
+- **Clic droit** : un quart de tour dans l'autre sens.
+- Une fois le niveau gagné : un clic pour passer au suivant.
+
+## Les règles
+
+- L'eau part du château d'eau et suit les raccords qui se touchent des deux côtés. Les tuyaux remplis changent de couleur, et une maison s'allume quand l'eau l'atteint.
+- Le niveau est gagné quand toutes les maisons ont de l'eau. Le haut du plateau indique le nombre de maisons alimentées et de coups joués.
+- Le réseau n'a jamais de boucle : chaque maison n'a qu'un seul chemin vers le château d'eau, et chaque niveau a toujours une solution.
+
+## Niveaux et étoiles
+
+- La grille commence en 5 × 5 et gagne une case de côté tous les 3 niveaux, jusqu'à 8 × 8.
+- Chaque niveau compte le nombre minimal de quarts de tour nécessaires. **3 étoiles** si tu fais aussi bien, **2** jusqu'à une fois et demie ce nombre, **1** au-delà.
+- Les niveaux sont toujours les mêmes, pour pouvoir les refaire. L'option **Réseaux au hasard** donne un réseau nouveau à chaque partie.
+
+## Records
+
+Le niveau le plus loin atteint, le total d'étoiles et le nombre de niveaux finis s'affichent à côté du jeu.
+
+## Données et synchronisation
+
+Niveau atteint, étoiles et niveaux finis sont enregistrés par NeoDex, sauvegardés et synchronisés entre tes PC si la synchro est activée.
 
 ## Installer
 

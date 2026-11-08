@@ -1,5 +1,5 @@
 // Tuyaux : Tourne les tuyaux pour amener l'eau du château d'eau jusqu'à toutes les maisons du quartier.
-// Jeu NeoDex en pixel art dessiné à la main (police bitmap, cadres et boutons en pixels). Il tourne dans le bac à sable de NeoDex.
+// Jeu NeoDex : police, cadres et boutons propres au jeu. Il tourne dans le bac à sable de NeoDex.
 const HTML = `<div class="appWrap wide">
   <div class="agHead"><span class="label">Tuyaux</span><span class="hint">Clic : tourner · clic droit : tourner dans l'autre sens</span></div>
   <div class="gMain"><div class="gameBox"><canvas id="gc" width="224" height="196"></canvas></div>
