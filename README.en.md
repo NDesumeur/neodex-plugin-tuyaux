@@ -35,3 +35,9 @@ Level reached, stars and levels finished are stored by NeoDex, backed up and syn
 In NeoDex: **NeoStore → Discover → Tuyaux → Install**.
 
 Building a plugin: see the [NeoDex SDK](https://github.com/NDesumeur/neodex-sdk).
+
+## Full screen and big grids
+
+- **Full screen**: "FULL SCREEN" button.
+- **The grid fills the frame**: the board takes all the room, whatever the size of the grid and of the window.
+- **Bigger grids**: the grid grows every three levels, from 5 × 5 up to 10 × 10 (level 16) then 12 × 12 (level 22). The size of the current level is shown in the records frame.

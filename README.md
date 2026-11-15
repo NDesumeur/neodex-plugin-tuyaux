@@ -35,3 +35,9 @@ Niveau atteint, étoiles et niveaux finis sont enregistrés par NeoDex, sauvegar
 Dans NeoDex : **NeoStore → À découvrir → Tuyaux → Installer**.
 
 Développer un plugin : voir le [SDK NeoDex](https://github.com/NDesumeur/neodex-sdk).
+
+## Plein écran et grandes grilles
+
+- **Plein écran** : bouton « PLEIN ÉCRAN ».
+- **La grille remplit le cadre** : le plateau prend toute la place, quelle que soit la taille de la grille et de la fenêtre.
+- **Grilles plus grandes** : la grille grandit tous les trois niveaux, de 5 × 5 jusqu'à 10 × 10 (niveau 16) puis 12 × 12 (niveau 22). La taille du niveau en cours s'affiche dans le cadre des records.

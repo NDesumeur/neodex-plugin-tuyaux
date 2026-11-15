@@ -5,19 +5,21 @@ const HTML = `<div class="appWrap wide">
   <div class="gMain"><div class="gameBox"><canvas id="gc" width="224" height="196"></canvas></div>
     <div class="gSide">
       <div class="sysCard"><b>RECORDS</b><div class="gStats" id="gStats"></div></div>
-      <div class="row"><button class="btn main" id="gNew">NOUVELLE PARTIE</button><button class="btn" id="tuPrev">◀</button><button class="btn" id="tuNext">▶</button></div>
+      <div class="row"><button class="btn main" id="gNew">NOUVELLE PARTIE</button><button class="btn" id="tuPrev">◀</button><button class="btn" id="tuNext">▶</button><button class="btn" id="tuFs">PLEIN ÉCRAN</button></div>
       <label class="row"><input type="checkbox" id="tuRnd"> Réseaux au hasard (nouveau à chaque partie)</label>
-      <div class="hint">L'eau suit les raccords qui se touchent des deux côtés. Une maison s'allume quand l'eau arrive.</div><div class="hint">Le réseau n'a jamais de boucle : chaque maison n'a qu'un seul chemin vers le château d'eau.</div>
+      <div class="hint">L'eau suit les raccords qui se touchent des deux côtés. Une maison s'allume quand l'eau arrive.</div><div class="hint">Le réseau n'a jamais de boucle : chaque maison n'a qu'un seul chemin vers le château d'eau.</div><div class="hint">La grille grandit tous les trois niveaux, de 5 × 5 jusqu'à 12 × 12.</div>
     </div></div>
 </div>`;
 const CSS = `.gMain{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
-.gameBox{display:grid;place-items:center;padding:10px;background:#05010b;flex:2;min-width:320px;position:relative}
+.gameBox{display:grid;place-items:center;padding:10px;background:#05010b;flex:2 1 480px;min-width:min(100%,320px);position:relative}
+.gameBox:fullscreen{padding:0}
+.gameBox:fullscreen canvas{height:100vh;max-width:100vw}
 .gameBox canvas{width:100%;image-rendering:pixelated;cursor:var(--cp,pointer);touch-action:none}
 .gSide{display:flex;flex-direction:column;gap:14px;flex:1;min-width:250px;max-width:420px}
 .gSide .sysCard{display:flex;flex-direction:column}
 .gStats{display:grid;grid-template-columns:1fr auto;gap:4px 14px}
 .gStats b{text-align:right}
-.gameBox canvas{max-width:640px;aspect-ratio:224/196}`;
+.gameBox canvas{height:min(calc(100vh - 190px),900px);min-height:300px;max-width:100%;width:auto}  /* le rapport largeur / hauteur suit la grille (posé par le jeu) */`;
 /* ---------- l'habillage pixel art, dessiné à la main : police bitmap (accents compris), cadres, boutons, icônes ----------
    Tout est en pixels pleins, agrandis par 2 sans lissage : aucun dégradé, aucune ombre floue. */
 const PXK = (() => {
@@ -289,7 +291,7 @@ export default async function (ctx) {
   view.innerHTML = HTML;
   pxSkin(view.querySelector('.appWrap'), { title: "TUYAUX", T: {"k": "#030a14", "k2": "#08162a", "fill": "#0e2240", "fillOn": "#143058", "hl": "#1c3a6a", "line": "#2e5a9a", "acc": "#3fe0ff", "accL": "#c8f8ff", "accS": "#1a9ac0", "accD": "#06304a", "rivet": "#c8f8ff", "btn": "#1c3a6a", "btnHi": "#4a7ac0", "btnLo": "#08162a", "btnHov": "#1c4478", "btnHovHi": "#6a9ae0", "text": "#eef6ff", "muted": "#a8c0e0", "acc2": "#5fdf6a", "gold": "#ffd84a", "orange": "#ffa030", "red": "#ff4a5a", "green": "#7ee07a", "green2": "#2f8a3a", "bg": "#040c1a", "bgDot": "#0e2240", "bgDot2": "#08162a", "spark": "#2e5a9a", "spark2": "#5fdf6a", "tile": ["................", "...:............", "................", "..........+.....", "................", "................", ".....:..........", "................", "................", ".............:..", "................", "..+.............", "................", ".........:......", "................", "................"]},
   emblem: ["............", "....kkkk....", "....kbbk....", "....kbbk....", "kkkkkbbkkkkk", "kbbbbbbbbbbk", "kbbbbbbbbbbk", "kkkkkbbkkkkk", "....kbbk....", "....kbbk....", "....kkkk....", "............"],
-  icons: [[/^NOUVELLE/, "play"], [/^RECORDS/, "crown"]] });
+  icons: [[/^NOUVELLE/, "play"], [/^RECORDS/, "crown"], [/^PLEIN/, "full"]] });
   const $ = id => view.querySelector('#' + id) || document.getElementById(id);
   const doc = async n => { try { return await folder.read(n); } catch { return null; } };
   const games = { best: {}, ...(await doc('games')) };
@@ -322,7 +324,7 @@ const clock = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStar
 // petits outils communs aux jeux : une toile pré-dessinée, la position du pointeur dans le canevas, un bip
 const cnv = (w, h, fn) => { const c = el('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; fn(g); return c; };
 const spr = (rows, pal) => cnv(Math.max(...rows.map(r => r.length)), rows.length, g => sprite(g, rows, 0, 0, pal));
-const W = 224, H = 196, cv = $('gc'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+let W = 224, H = 196; const cv = $('gc'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
 const cpos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };
 let actx = null;
 const beep = (f, d = .1, type = 'square', slide = 0, vol = .08) => { try { actx ??= new AudioContext(); const o = actx.createOscillator(), gn = actx.createGain(), t = actx.currentTime; o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d); gn.gain.setValueAtTime(vol, t); gn.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(gn).connect(actx.destination); o.start(t); o.stop(t + d + .02); } catch {} };
@@ -355,7 +357,7 @@ const TU_TOWER = spr(['..kkkkkkkk..', '.kbBbbbbbbk.', '.kbbbbbbbbk.', '.kbbbbbbb
 const tus = gstore('tuyaux', {level: 1, top: 1, stars: 0, games: 0});
 let tu = null;
 function tuGen(level, seed = level * 104729) {  // un arbre couvrant au hasard depuis le centre : chaque case est reliée, sans boucle ; les feuilles sont les maisons
-  const n = Math.min(8, 5 + Math.floor((level - 1) / 3)), r = seeded(seed), m = [...Array(n)].map(() => Array(n).fill(0)), src = [Math.floor(n / 2), Math.floor(n / 2)];
+  const n = Math.min(12, 5 + Math.floor((level - 1) / 3)), r = seeded(seed), m = [...Array(n)].map(() => Array(n).fill(0)), src = [Math.floor(n / 2), Math.floor(n / 2)];
   const seen = new Set([src.join()]), front = [src];
   while (front.length) {
     const i = Math.floor(r() * front.length), [x, y] = front[i], opts = TU_DIR.filter(([, dx, dy]) => { const a = x + dx, b = y + dy; return a >= 0 && b >= 0 && a < n && b < n && !seen.has(a + ',' + b); });
@@ -374,16 +376,19 @@ function tuFlow() {  // l'eau part du château et suit les raccords qui se répo
   while (q.length) { const [x, y] = q.pop(); for (const [bit, dx, dy, opp] of TU_DIR) { const a = x + dx, b = y + dy; if ((m[y][x] & bit) && a >= 0 && b >= 0 && a < n && b < n && (m[b][a] & opp) && !wet[b][a]) { wet[b][a] = true; q.push([a, b]); } } }
   tu.wet = wet; return wet.every(r => r.every(v => v));
 }
-function tuNew(level = tus.level) { tus.level = level; saveGames(); tu = Object.assign(tu || {tick: 0, raf: 0}, {mode: 'play', ...tuGen(level, tus.rnd ? Math.floor(Math.random() * 1e9) : undefined), moves: 0, wonAt: 0, spin: null, hover: null}); if (tuFlow()) { tu.m[0][0] = rot(tu.m[0][0]); tuFlow(); } tuInfo(); }
+// le canevas prend la taille de la grille (et d'un bandeau de 16 px) : la grille remplit tout le cadre, quelle que soit sa taille
+const tuBgs = {};
+function tuSize(n) { W = n * TU.T + 8; H = n * TU.T + 24; if (cv.width !== W) { cv.width = W; cv.height = H; g.imageSmoothingEnabled = false; } cv.style.aspectRatio = W + ' / ' + H; }
+function tuNew(level = tus.level) { tus.level = level; saveGames(); tu = Object.assign(tu || {tick: 0, raf: 0}, {mode: 'play', ...tuGen(level, tus.rnd ? Math.floor(Math.random() * 1e9) : undefined), moves: 0, wonAt: 0, spin: null, hover: null}); tuSize(tu.n); if (tuFlow()) { tu.m[0][0] = rot(tu.m[0][0]); tuFlow(); } tuInfo(); }
 const tuOff = () => [Math.floor((W - tu.n * TU.T) / 2), 16 + Math.floor((H - 16 - tu.n * TU.T) / 2)];
 function tuTurn(x, y, back) {
   if (tu.mode !== 'play') return; for (let k = 0; k < (back ? 3 : 1); k++) tu.m[y][x] = rot(tu.m[y][x]); tu.moves++; tu.spin = {x, y, t: 6, back}; beep(back ? 300 : 360, .04, 'square', 0, .04);
   if (tuFlow()) { tu.mode = 'won'; tu.wonAt = tu.tick; const st = tu.moves <= tu.par ? 3 : tu.moves <= tu.par * 1.5 ? 2 : 1; tu.stars = st; tus.stars += st; tus.games++; if (tus.level >= tus.top) tus.top = tus.level + 1; best('tuyaux', tus.level); saveGames(); tuInfo(); [392, 523, 659, 784].forEach((f, k) => setTimeout(() => beep(f, .16, 'triangle'), k * 100)); }
   else if (tu.wet[y][x]) beep(720, .05, 'triangle', 0, .04);
 }
-const TU_BG = cnv(W, H, b => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) px(b, (x * 7 + y * 13) % 17 < 2 ? '#3a7a3a' : (x + y) % 2 ? '#2e6a32' : '#2a6430', x, y); });
+const tuBg = () => tuBgs[W] ??= cnv(W, H, b => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) px(b, (x * 7 + y * 13) % 17 < 2 ? '#3a7a3a' : (x + y) % 2 ? '#2e6a32' : '#2a6430', x, y); });
 function tuDraw() {
-  g.drawImage(TU_BG, 0, 0); const [ox, oy] = tuOff(), T = TU.T;
+  g.drawImage(tuBg(), 0, 0); const [ox, oy] = tuOff(), T = TU.T;
   px(g, '#05010b', ox - 3, oy - 3, tu.n * T + 6, tu.n * T + 6); px(g, '#5a3a24', ox - 2, oy - 2, tu.n * T + 4, tu.n * T + 4);
   if (tu.spin && --tu.spin.t <= 0) tu.spin = null;
   for (let y = 0; y < tu.n; y++) for (let x = 0; x < tu.n; x++) {
@@ -395,26 +400,28 @@ function tuDraw() {
     const isSrc = x === tu.src[0] && y === tu.src[1], leaf = [1, 2, 4, 8].includes(v);
     if (isSrc) g.drawImage(TU_TOWER, X + 4, Y + 5); else if (leaf) g.drawImage(TU_HOUSE[wet ? 1 : 0], X + 5, Y + 5);
   }
-  px(g, '#1a3a1c', 0, 0, W, 14); pxFont(g, 'NIVEAU ' + tus.level, 5, 10, '#9ad0ff', 7);
+  px(g, '#1a3a1c', 0, 0, W, 14); pxFont(g, 'NIV ' + tus.level, 4, 10, '#9ad0ff', 7);
   const houses = tu.m.flat().filter((v, i) => [1, 2, 4, 8].includes(v) && !(i % tu.n === tu.src[0] && Math.floor(i / tu.n) === tu.src[1])).length, lit = tu.m.flat().filter((v, i) => [1, 2, 4, 8].includes(v) && tu.wet[Math.floor(i / tu.n)][i % tu.n] && !(i % tu.n === tu.src[0] && Math.floor(i / tu.n) === tu.src[1])).length;
-  pxFont(g, lit + ' / ' + houses + ' maisons · ' + tu.moves + ' coups', W - 5, 10, '#c8ffc8', 6, 'right');
-  if (tu.mode === 'won' && tu.tick - tu.wonAt > 30) gameText(g, W, [['TOUT LE MONDE A DE L\'EAU !', '#9ad0ff', 8], [tu.stars + (tu.stars > 1 ? ' étoiles' : ' étoile') + ' sur 3 · ' + tu.moves + ' coups', '#ffd84a'], ['Clic : niveau suivant', '#ffffff']], 90);
+  pxFont(g, lit + '/' + houses + ' · ' + tu.moves, W - 4, 10, '#c8ffc8', 6, 'right');  // maisons allumées · coups
+  if (tu.mode === 'won' && tu.tick - tu.wonAt > 30) gameText(g, W, [['BRAVO !', '#9ad0ff', 12], [tu.stars + ' / 3 étoile' + (tu.stars > 1 ? 's' : ''), '#ffd84a'], [tu.moves + ' coup' + (tu.moves > 1 ? 's' : ''), '#ffffff'], ['Clic : suivant', '#ffffff']], Math.round(H / 2) - 14);
 }
 const tuCell = e => { const [x, y] = cpos(e), [ox, oy] = tuOff(), cx = Math.floor((x - ox) / TU.T), cy = Math.floor((y - oy) / TU.T); return cx >= 0 && cy >= 0 && cx < tu.n && cy < tu.n ? [cx, cy] : null; };
 cv.oncontextmenu = e => e.preventDefault();
 cv.onpointermove = e => { if (tu) tu.hover = tuCell(e); };
 cv.onpointerdown = e => { e.preventDefault(); if (!tu) return; if (tu.mode === 'won') { if (tu.tick - tu.wonAt > 30) tuNew(tus.level + 1); return; } const c = tuCell(e); if (c) tuTurn(c[0], c[1], e.button === 2); };
-function tuInfo() { showStats([['Niveau le plus loin', tus.top], ['Étoiles', tus.stars], ['Niveaux finis', tus.games]]); }
+function tuInfo() { showStats([['Niveau', tus.level + (tu ? ' (' + tu.n + ' × ' + tu.n + ')' : '')], ['Niveau le plus loin', tus.top], ['Étoiles', tus.stars], ['Niveaux finis', tus.games]]); }
 $('tuPrev').onclick = () => { if (tus.level > 1) tuNew(tus.level - 1); $('tuPrev').blur(); };
 $('tuNext').onclick = () => { if (tus.level < tus.top) tuNew(tus.level + 1); $('tuNext').blur(); };
 $('gNew').onclick = () => { tuNew(tus.level); $('gNew').blur(); };
 $('tuRnd').checked = !!tus.rnd; $('tuRnd').onchange = () => { tus.rnd = $('tuRnd').checked; saveGames(); tuNew(tus.level); $('tuRnd').blur(); };  // plans au hasard : la taille suit toujours le niveau
 
 {  // vérification : quatre quarts de tour reviennent au départ ; le réseau généré relie toutes les cases avant d'être mélangé
-  let ok = true; for (let lv = 1; lv < 20; lv++) { const r = tuGen(lv); ok &&= r.m.flat().every(v => v > 0); }
+  let ok = tuGen(16).n === 10 && tuGen(22).n === 12 && tuGen(40).n === 12; for (let lv = 1; lv < 26; lv++) { const r = tuGen(lv); ok &&= r.m.flat().every(v => v > 0); }
   const keep = tu, gen = tuGen(7); tu = {...gen, m: gen.sol.map(r => [...r])}; const solved = tuFlow();
   console.assert(rot(rot(rot(rot(5)))) === 5 && rot(1) === 2 && rot(8) === 1 && ok && solved, 'tuyaux'); tu = keep;
 }
+cv.__tu = {st: () => tu, go: lv => tuNew(lv), solve: () => { tu.m = tu.sol.map(r => [...r]); tu.m[0][0] = rot(rot(rot(tu.m[0][0]))); tuTurn(0, 0, false); }};  // pour le test « local »
+$('tuFs').onclick = () => { $('tuFs').blur(); try { document.fullscreenElement ? document.exitFullscreen() : cv.parentElement.requestFullscreen?.().catch(() => {}); } catch {} };
 ctx.onOpen(() => { if (!tu) tuNew(); gameLoop(tu, 'tuyaux', () => {}, tuDraw); tuInfo(); });
 
 }
