@@ -49,7 +49,6 @@
  "NIVEAU": "LEVEL",
  "NOUVELLE PARTIE": "NEW GAME",
  "Niveau": "Level",
- "Niveau atteint, étoiles et niveaux finis.": "Level reached, stars and levels finished.",
  "Niveau le plus loin": "Farthest level",
  "Niveaux finis": "Finished levels",
  "Nt": "Nt",
@@ -66,11 +65,12 @@
  "Uc": "Uc",
  "Ud": "Ud",
  "Ug": "Ug",
- "Un jeu de réflexion : fais pivoter les tuyaux d'un clic pour amener l'eau du château d'eau, au centre, jusqu'à toutes les maisons. Réseaux sans boucle et toujours solubles, grilles de 5 × 5 à 8 × 8, jusqu'à 3 étoiles selon le nombre de coups comparé au minimum, et une option de réseaux au hasard ; progression synchronisée. Bouton plein écran, la grille remplit tout le cadre, et des grilles plus grandes en avançant, jusqu'à 12 × 12.": "A puzzle game: rotate the pipes with a click to bring water from the water tower, in the centre, to every house. Loop-free networks that can always be solved, grids from 5 × 5 to 8 × 8, up to 3 stars depending on your moves compared with the minimum, and a random networks option; synced progress. Full screen button, the grid fills the whole frame, and bigger grids as you go, up to 12 × 12.",
  "sur 3 ·": "out of 3 ·",
  "Étoiles": "Stars",
  "étoile": "star",
  "étoiles": "stars",
  "NIV": "LVL",
- "/ 3 étoile": "/ 3 star"
+ "/ 3 étoile": "/ 3 star",
+ "Rien n'est synchronisé : tes records restent sur cet appareil.": "Nothing is synced: your records stay on this device.",
+ "Un jeu de réflexion : fais pivoter les tuyaux d'un clic pour amener l'eau du château d'eau, au centre, jusqu'à toutes les maisons. Réseaux sans boucle et toujours solubles, grilles de 5 × 5 à 8 × 8, jusqu'à 3 étoiles selon le nombre de coups comparé au minimum, et une option de réseaux au hasard. Bouton plein écran, la grille remplit tout le cadre, et des grilles plus grandes en avançant, jusqu'à 12 × 12.": "A puzzle game: rotate the pipes with a click to bring water from the water tower, in the centre, to every house. Loop-free networks that can always be solved, grids from 5 × 5 to 8 × 8, up to 3 stars depending on your moves compared with the minimum, and a random networks option. Full screen button, the grid fills the whole frame, and bigger grids as you go, up to 12 × 12."
 }
