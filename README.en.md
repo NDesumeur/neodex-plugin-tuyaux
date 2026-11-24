@@ -4,6 +4,10 @@ A puzzle game: the neighbourhood's pipes have been turned every which way. Rotat
 
 *Version française : [README.md](README.md)*
 
+## Flowing water, wrapped edges and daily network (new in 1.2.0)
+
+At the end, the water really flows from the water tower, cell by cell, and each house lights up when it arrives. New **Wrapped edges** box: a pipe leaving one side comes back on the other (blue dotted frame). **Daily network**: one 8 × 8 network, the same for everyone each day, with a day streak.
+
 ## Controls
 
 - **Click** a pipe: a quarter turn clockwise.

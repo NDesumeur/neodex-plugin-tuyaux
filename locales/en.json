@@ -72,5 +72,15 @@
  "NIV": "LVL",
  "/ 3 étoile": "/ 3 star",
  "Rien n'est synchronisé : tes records restent sur cet appareil.": "Nothing is synced: your records stay on this device.",
- "Un jeu de réflexion : fais pivoter les tuyaux d'un clic pour amener l'eau du château d'eau, au centre, jusqu'à toutes les maisons. Réseaux sans boucle et toujours solubles, grilles de 5 × 5 à 8 × 8, jusqu'à 3 étoiles selon le nombre de coups comparé au minimum, et une option de réseaux au hasard. Bouton plein écran, la grille remplit tout le cadre, et des grilles plus grandes en avançant, jusqu'à 12 × 12.": "A puzzle game: rotate the pipes with a click to bring water from the water tower, in the centre, to every house. Loop-free networks that can always be solved, grids from 5 × 5 to 8 × 8, up to 3 stars depending on your moves compared with the minimum, and a random networks option. Full screen button, the grid fills the whole frame, and bigger grids as you go, up to 12 × 12."
+ "Bords reliés : un tuyau qui sort d’un côté revient de l’autre": "Wrapped edges: a pipe leaving one side comes back on the other",
+ "RÉSEAU DU JOUR": "DAILY NETWORK",
+ "DU JOUR": "DAILY",
+ "· BORDS RELIÉS": "· WRAPPED",
+ "Réseau du jour": "Daily network",
+ "à faire": "to do",
+ "fait ✓": "done ✓",
+ "Série de jours": "Day streak",
+ "record": "best",
+ "raté": "failed",
+ "Un jeu de réflexion : fais pivoter les tuyaux d'un clic pour amener l'eau du château d'eau, au centre, jusqu'à toutes les maisons. Réseaux sans boucle et toujours solubles, grilles de 5 × 5 à 8 × 8, jusqu'à 3 étoiles selon le nombre de coups comparé au minimum, et une option de réseaux au hasard. Bouton plein écran, la grille remplit tout le cadre, et des grilles plus grandes en avançant, jusqu'à 12 × 12. L’eau coule pour de vrai à la fin ; bords reliés et réseau du jour avec série de jours.": "A puzzle game: rotate the pipes with a click to bring water from the water tower, in the centre, to every house. Loop-free networks that can always be solved, grids from 5 × 5 to 8 × 8, up to 3 stars depending on your moves compared with the minimum, and a random networks option. Full screen button, the grid fills the whole frame, and bigger grids as you go, up to 12 × 12. The water really flows at the end; wrapped edges and a daily network with a day streak."
 }

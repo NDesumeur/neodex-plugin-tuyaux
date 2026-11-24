@@ -4,6 +4,10 @@ Un jeu de réflexion : les tuyaux du quartier ont été tournés dans tous les s
 
 *English version: [README.en.md](README.en.md)*
 
+## L’eau qui coule, bords reliés et réseau du jour (nouveau en 1.2.0)
+
+À la fin, l’eau coule pour de vrai depuis le château d’eau, case après case, et chaque maison s’allume quand elle arrive. Nouvelle case **Bords reliés** : un tuyau qui sort d’un côté revient de l’autre (cadre en pointillés bleus). **Réseau du jour** : un réseau 8 × 8 le même pour tout le monde chaque jour, avec une série de jours.
+
 ## Commandes
 
 - **Clic** sur un tuyau : un quart de tour dans le sens des aiguilles d'une montre.

@@ -7,6 +7,8 @@ const HTML = `<div class="appWrap wide">
       <div class="sysCard"><b>RECORDS</b><div class="gStats" id="gStats"></div></div>
       <div class="row"><button class="btn main" id="gNew">NOUVELLE PARTIE</button><button class="btn" id="tuPrev">◀</button><button class="btn" id="tuNext">▶</button><button class="btn" id="tuFs">PLEIN ÉCRAN</button></div>
       <label class="row"><input type="checkbox" id="tuRnd"> Réseaux au hasard (nouveau à chaque partie)</label>
+      <label class="row"><input type="checkbox" id="tuWrap"> Bords reliés : un tuyau qui sort d’un côté revient de l’autre</label>
+      <div class="row"><button class="btn" id="tuDaily">RÉSEAU DU JOUR</button></div>
       <div class="hint">L'eau suit les raccords qui se touchent des deux côtés. Une maison s'allume quand l'eau arrive.</div><div class="hint">Le réseau n'a jamais de boucle : chaque maison n'a qu'un seul chemin vers le château d'eau.</div><div class="hint">La grille grandit tous les trois niveaux, de 5 × 5 jusqu'à 12 × 12.</div>
     </div></div>
 </div>`;
@@ -354,45 +356,52 @@ const TU_SPR = [0, 1].map(wet => [...Array(16)].map((_, m) => tuPipe(m, wet)));
 const TU_PAL = {k: '#05010b', r: '#d8584a', R: '#8a2c2c', w: '#e8d8c0', W: '#b8a890', d: '#6a3a24', l: '#ffd86b', o: '#2a2a3a', s: '#8a8aa8', S: '#c8c8e0', b: '#3fa0ff', B: '#9ad0ff'};
 const TU_HOUSE = [spr(['....kk......', '...krrk.....', '..krrrrk....', '.krrrrrrk...', 'krrrrrrrrk..', '.kwwwwwwk...', '.kwookwwk...', '.kwookddk...', '.kwwwkddk...', '.kkkkkkkk...'], TU_PAL), spr(['....kk......', '...krrk.....', '..krrrrk....', '.krrrrrrk...', 'krrrrrrrrk..', '.kwwwwwwk...', '.kwllkwwk...', '.kwllkddk...', '.kwwwkddk...', '.kkkkkkkk...'], TU_PAL)];
 const TU_TOWER = spr(['..kkkkkkkk..', '.kbBbbbbbbk.', '.kbbbbbbbbk.', '.kbbbbbbbbk.', '..kkkkkkkk..', '...ks..sk...', '...k.ss.k...', '...ks..sk...', '..kk....kk..', '..k......k..'], TU_PAL);
-const tus = gstore('tuyaux', {level: 1, top: 1, stars: 0, games: 0});
+const tus = gstore('tuyaux', {level: 1, top: 1, stars: 0, games: 0}); tus.daily ??= {last: '', streak: 0, best: 0};
+const tuDay = (k = 0) => { const d = new Date(Date.now() - k * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const tuNb = (x, y, dx, dy, n, wrap) => { const a = x + dx, b = y + dy; if (wrap) return [(a + n) % n, (b + n) % n]; return a >= 0 && b >= 0 && a < n && b < n ? [a, b] : null; };  // la voisine, en passant par le bord d'en face si les bords sont reliés
 let tu = null;
-function tuGen(level, seed = level * 104729) {  // un arbre couvrant au hasard depuis le centre : chaque case est reliée, sans boucle ; les feuilles sont les maisons
+function tuGen(level, seed = level * 104729, wrap = false) {  // un arbre couvrant au hasard depuis le centre : chaque case est reliée, sans boucle ; les feuilles sont les maisons
   const n = Math.min(12, 5 + Math.floor((level - 1) / 3)), r = seeded(seed), m = [...Array(n)].map(() => Array(n).fill(0)), src = [Math.floor(n / 2), Math.floor(n / 2)];
   const seen = new Set([src.join()]), front = [src];
   while (front.length) {
-    const i = Math.floor(r() * front.length), [x, y] = front[i], opts = TU_DIR.filter(([, dx, dy]) => { const a = x + dx, b = y + dy; return a >= 0 && b >= 0 && a < n && b < n && !seen.has(a + ',' + b); });
+    const i = Math.floor(r() * front.length), [x, y] = front[i], opts = TU_DIR.filter(([, dx, dy]) => { const p = tuNb(x, y, dx, dy, n, wrap); return p && !seen.has(p.join()); });
     if (!opts.length) { front.splice(i, 1); continue; }
-    const [bit, dx, dy, opp] = opts[Math.floor(r() * opts.length)], a = x + dx, b = y + dy; m[y][x] |= bit; m[b][a] |= opp; seen.add(a + ',' + b); front.push([a, b]);
+    const [bit, dx, dy, opp] = opts[Math.floor(r() * opts.length)], [a, b] = tuNb(x, y, dx, dy, n, wrap); m[y][x] |= bit; m[b][a] |= opp; seen.add(a + ',' + b); front.push([a, b]);
   }
   const sol = m.map(row => [...row]); let par = 0;
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {  // chaque case tournée au hasard ; le « par » compte les quarts de tour pour revenir (dans un sens ou dans l'autre)
     const t = Math.floor(r() * 4); for (let k = 0; k < t; k++) m[y][x] = rot(m[y][x]);
     let c = m[y][x], k = 0; while (c !== sol[y][x]) { c = rot(c); k++; } par += Math.min(k, 4 - k);
   }
-  return {n, m, src, sol, par: Math.max(1, par)};
+  return {n, m, src, sol, par: Math.max(1, par), wrap};
 }
 function tuFlow() {  // l'eau part du château et suit les raccords qui se répondent des deux côtés
-  const {n, m, src} = tu, wet = m.map(r => r.map(() => false)), q = [src]; wet[src[1]][src[0]] = true;
-  while (q.length) { const [x, y] = q.pop(); for (const [bit, dx, dy, opp] of TU_DIR) { const a = x + dx, b = y + dy; if ((m[y][x] & bit) && a >= 0 && b >= 0 && a < n && b < n && (m[b][a] & opp) && !wet[b][a]) { wet[b][a] = true; q.push([a, b]); } } }
-  tu.wet = wet; return wet.every(r => r.every(v => v));
+  const {n, m, src} = tu, wet = m.map(r => r.map(() => false)), dist = m.map(r => r.map(() => 0)), q = [src]; wet[src[1]][src[0]] = true;
+  while (q.length) { const [x, y] = q.shift(); for (const [bit, dx, dy, opp] of TU_DIR) { const p = tuNb(x, y, dx, dy, n, tu.wrap); if (!p) continue; const [a, b] = p; if ((m[y][x] & bit) && (m[b][a] & opp) && !wet[b][a]) { wet[b][a] = true; dist[b][a] = dist[y][x] + 1; q.push([a, b]); } } }
+  tu.wet = wet; tu.dist = dist; return wet.every(r => r.every(v => v));
 }
 // le canevas prend la taille de la grille (et d'un bandeau de 16 px) : la grille remplit tout le cadre, quelle que soit sa taille
 const tuBgs = {};
 function tuSize(n) { W = n * TU.T + 8; H = n * TU.T + 24; if (cv.width !== W) { cv.width = W; cv.height = H; g.imageSmoothingEnabled = false; } cv.style.aspectRatio = W + ' / ' + H; }
-function tuNew(level = tus.level) { tus.level = level; saveGames(); tu = Object.assign(tu || {tick: 0, raf: 0}, {mode: 'play', ...tuGen(level, tus.rnd ? Math.floor(Math.random() * 1e9) : undefined), moves: 0, wonAt: 0, spin: null, hover: null}); tuSize(tu.n); if (tuFlow()) { tu.m[0][0] = rot(tu.m[0][0]); tuFlow(); } tuInfo(); }
+function tuNew(level = tus.level, daily = false) { if (!daily) { tus.level = level; saveGames(); } tu = Object.assign(tu || {tick: 0, raf: 0}, {mode: 'play', ...(daily ? tuGen(10, +tuDay().replace(/-/g, '')) : tuGen(level, tus.rnd ? Math.floor(Math.random() * 1e9) : undefined, !!tus.wrap)), daily, moves: 0, wonAt: 0, spin: null, hover: null}); tuSize(tu.n); if (tuFlow()) { tu.m[0][0] = rot(tu.m[0][0]); tuFlow(); } tuInfo(); }
 const tuOff = () => [Math.floor((W - tu.n * TU.T) / 2), 16 + Math.floor((H - 16 - tu.n * TU.T) / 2)];
 function tuTurn(x, y, back) {
   if (tu.mode !== 'play') return; for (let k = 0; k < (back ? 3 : 1); k++) tu.m[y][x] = rot(tu.m[y][x]); tu.moves++; tu.spin = {x, y, t: 6, back}; beep(back ? 300 : 360, .04, 'square', 0, .04);
-  if (tuFlow()) { tu.mode = 'won'; tu.wonAt = tu.tick; const st = tu.moves <= tu.par ? 3 : tu.moves <= tu.par * 1.5 ? 2 : 1; tu.stars = st; tus.stars += st; tus.games++; if (tus.level >= tus.top) tus.top = tus.level + 1; best('tuyaux', tus.level); saveGames(); tuInfo(); [392, 523, 659, 784].forEach((f, k) => setTimeout(() => beep(f, .16, 'triangle'), k * 100)); }
+  if (tuFlow()) { tu.mode = 'won'; tu.wonAt = tu.tick; const st = tu.moves <= tu.par ? 3 : tu.moves <= tu.par * 1.5 ? 2 : 1; tu.stars = st; tus.stars += st; tus.games++;
+    tu.flowEnd = Math.max(...tu.dist.flat()) * TU_FLOW;  // l'eau coule depuis le château, case après case
+    if (tu.daily) { const d = tus.daily; if (d.last !== tuDay()) { d.streak = d.last === tuDay(1) ? d.streak + 1 : 1; d.best = Math.max(d.best, d.streak); d.last = tuDay(); } } else { if (tus.level >= tus.top) tus.top = tus.level + 1; best('tuyaux', tus.level); } saveGames(); tuInfo(); [392, 523, 659, 784].forEach((f, k) => setTimeout(() => beep(f, .16, 'triangle'), k * 100)); }
   else if (tu.wet[y][x]) beep(720, .05, 'triangle', 0, .04);
 }
 const tuBg = () => tuBgs[W] ??= cnv(W, H, b => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) px(b, (x * 7 + y * 13) % 17 < 2 ? '#3a7a3a' : (x + y) % 2 ? '#2e6a32' : '#2a6430', x, y); });
+const TU_FLOW = 3;  // images par case quand l'eau coule à la fin
 function tuDraw() {
   g.drawImage(tuBg(), 0, 0); const [ox, oy] = tuOff(), T = TU.T;
   px(g, '#05010b', ox - 3, oy - 3, tu.n * T + 6, tu.n * T + 6); px(g, '#5a3a24', ox - 2, oy - 2, tu.n * T + 4, tu.n * T + 4);
+  if (tu.wrap) for (let k = 0; k < tu.n * T + 6; k += 4) { const c = (k + (tu.tick >> 2)) % 8 < 4 ? '#3fa0ff' : '#9ad0ff'; px(g, c, ox - 3 + k, oy - 3, 2, 1); px(g, c, ox - 3 + k, oy + tu.n * T + 2, 2, 1); px(g, c, ox - 3, oy - 3 + k, 1, 2); px(g, c, ox + tu.n * T + 2, oy - 3 + k, 1, 2); }  // les bords reliés : un cadre d'eau en pointillés
   if (tu.spin && --tu.spin.t <= 0) tu.spin = null;
   for (let y = 0; y < tu.n; y++) for (let x = 0; x < tu.n; x++) {
-    const X = ox + x * T, Y = oy + y * T, v = tu.m[y][x], wet = tu.wet[y][x];
+    const X = ox + x * T, Y = oy + y * T, v = tu.m[y][x], flow = tu.mode === 'won' ? tu.tick - tu.wonAt : 1e9, wet = tu.wet[y][x] && tu.dist[y][x] * TU_FLOW <= flow;
+    if (tu.mode === 'won' && tu.dist[y][x] * TU_FLOW === flow) { if ([1, 2, 4, 8].includes(v)) beep(880 + tu.dist[y][x] * 20, .05, 'triangle', 0, .04); }
     px(g, (x + y) % 2 ? '#6a4a30' : '#634428', X, Y, T, T);
     if (tu.hover && tu.hover[0] === x && tu.hover[1] === y && tu.mode === 'play') px(g, '#8a6a40', X, Y, T, T);
     const s = tu.spin && tu.spin.x === x && tu.spin.y === y ? tu.spin : null;
@@ -400,16 +409,18 @@ function tuDraw() {
     const isSrc = x === tu.src[0] && y === tu.src[1], leaf = [1, 2, 4, 8].includes(v);
     if (isSrc) g.drawImage(TU_TOWER, X + 4, Y + 5); else if (leaf) g.drawImage(TU_HOUSE[wet ? 1 : 0], X + 5, Y + 5);
   }
-  px(g, '#1a3a1c', 0, 0, W, 14); pxFont(g, 'NIV ' + tus.level, 4, 10, '#9ad0ff', 7);
+  px(g, '#1a3a1c', 0, 0, W, 14); pxFont(g, tu.daily ? 'DU JOUR' : 'NIV ' + tus.level + (tu.wrap ? ' · BORDS RELIÉS' : ''), 4, 10, '#9ad0ff', 7);
   const houses = tu.m.flat().filter((v, i) => [1, 2, 4, 8].includes(v) && !(i % tu.n === tu.src[0] && Math.floor(i / tu.n) === tu.src[1])).length, lit = tu.m.flat().filter((v, i) => [1, 2, 4, 8].includes(v) && tu.wet[Math.floor(i / tu.n)][i % tu.n] && !(i % tu.n === tu.src[0] && Math.floor(i / tu.n) === tu.src[1])).length;
   pxFont(g, lit + '/' + houses + ' · ' + tu.moves, W - 4, 10, '#c8ffc8', 6, 'right');  // maisons allumées · coups
-  if (tu.mode === 'won' && tu.tick - tu.wonAt > 30) gameText(g, W, [['BRAVO !', '#9ad0ff', 12], [tu.stars + ' / 3 étoile' + (tu.stars > 1 ? 's' : ''), '#ffd84a'], [tu.moves + ' coup' + (tu.moves > 1 ? 's' : ''), '#ffffff'], ['Clic : suivant', '#ffffff']], Math.round(H / 2) - 14);
+  if (tu.mode === 'won' && tu.tick - tu.wonAt > (tu.flowEnd || 0) + 30) gameText(g, W, [['BRAVO !', '#9ad0ff', 12], [tu.stars + ' / 3 étoile' + (tu.stars > 1 ? 's' : ''), '#ffd84a'], [tu.moves + ' coup' + (tu.moves > 1 ? 's' : ''), '#ffffff'], ['Clic : suivant', '#ffffff']], Math.round(H / 2) - 14);
 }
 const tuCell = e => { const [x, y] = cpos(e), [ox, oy] = tuOff(), cx = Math.floor((x - ox) / TU.T), cy = Math.floor((y - oy) / TU.T); return cx >= 0 && cy >= 0 && cx < tu.n && cy < tu.n ? [cx, cy] : null; };
 cv.oncontextmenu = e => e.preventDefault();
 cv.onpointermove = e => { if (tu) tu.hover = tuCell(e); };
-cv.onpointerdown = e => { e.preventDefault(); if (!tu) return; if (tu.mode === 'won') { if (tu.tick - tu.wonAt > 30) tuNew(tus.level + 1); return; } const c = tuCell(e); if (c) tuTurn(c[0], c[1], e.button === 2); };
-function tuInfo() { showStats([['Niveau', tus.level + (tu ? ' (' + tu.n + ' × ' + tu.n + ')' : '')], ['Niveau le plus loin', tus.top], ['Étoiles', tus.stars], ['Niveaux finis', tus.games]]); }
+cv.onpointerdown = e => { e.preventDefault(); if (!tu) return; if (tu.mode === 'won') { if (tu.tick - tu.wonAt > (tu.flowEnd || 0) + 30) tuNew(tu.daily ? tus.level : tus.level + 1); return; } const c = tuCell(e); if (c) tuTurn(c[0], c[1], e.button === 2); };
+function tuInfo() { const d = tus.daily; showStats([['Niveau', tus.level + (tu ? ' (' + tu.n + ' × ' + tu.n + ')' : '')], ['Niveau le plus loin', tus.top], ['Étoiles', tus.stars], ['Niveaux finis', tus.games], ['Réseau du jour', d.last === tuDay() ? 'fait ✓' : 'à faire'], ['Série de jours', (d.last === tuDay() || d.last === tuDay(1) ? d.streak : 0) + ' (record ' + d.best + ')']]); }
+$('tuWrap').checked = !!tus.wrap; $('tuWrap').onchange = () => { tus.wrap = $('tuWrap').checked; saveGames(); tuNew(tus.level); $('tuWrap').blur(); };
+$('tuDaily').onclick = () => { tuNew(tus.level, true); $('tuDaily').blur(); };
 $('tuPrev').onclick = () => { if (tus.level > 1) tuNew(tus.level - 1); $('tuPrev').blur(); };
 $('tuNext').onclick = () => { if (tus.level < tus.top) tuNew(tus.level + 1); $('tuNext').blur(); };
 $('gNew').onclick = () => { tuNew(tus.level); $('gNew').blur(); };
@@ -418,7 +429,10 @@ $('tuRnd').checked = !!tus.rnd; $('tuRnd').onchange = () => { tus.rnd = $('tuRnd
 {  // vérification : quatre quarts de tour reviennent au départ ; le réseau généré relie toutes les cases avant d'être mélangé
   let ok = tuGen(16).n === 10 && tuGen(22).n === 12 && tuGen(40).n === 12; for (let lv = 1; lv < 26; lv++) { const r = tuGen(lv); ok &&= r.m.flat().every(v => v > 0); }
   const keep = tu, gen = tuGen(7); tu = {...gen, m: gen.sol.map(r => [...r])}; const solved = tuFlow();
-  console.assert(rot(rot(rot(rot(5)))) === 5 && rot(1) === 2 && rot(8) === 1 && ok && solved, 'tuyaux'); tu = keep;
+  const gw = tuGen(9, 5, true); tu = {...gw, m: gw.sol.map(r => [...r])}; const wsolved = tuFlow(), edges = gw.sol.flat().reduce((a, v) => a + [1, 2, 4, 8].filter(b => v & b).length, 0) / 2;
+  const crosses = gw.sol.some((r, y) => (r[0] & 8) || (r[gw.n - 1] & 2)) || gw.sol[0].some(v => v & 1);  // au moins un tuyau passe par un bord
+  ok &&= wsolved && edges === gw.n * gw.n - 1 && crosses && Math.max(...tu.dist.flat()) > 0;
+  console.assert(rot(rot(rot(rot(5)))) === 5 && rot(1) === 2 && rot(8) === 1 && ok && solved, 'tuyaux'); cv.dataset.selfcheck = ok && solved ? 'ok' : 'raté'; tu = keep;
 }
 cv.__tu = {st: () => tu, go: lv => tuNew(lv), solve: () => { tu.m = tu.sol.map(r => [...r]); tu.m[0][0] = rot(rot(rot(tu.m[0][0]))); tuTurn(0, 0, false); }};  // pour le test « local »
 $('tuFs').onclick = () => { $('tuFs').blur(); try { document.fullscreenElement ? document.exitFullscreen() : cv.parentElement.requestFullscreen?.().catch(() => {}); } catch {} };

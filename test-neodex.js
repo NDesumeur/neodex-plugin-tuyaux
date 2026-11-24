@@ -10,7 +10,19 @@ module.exports = async ({ pj, sleep }) => {
     await U(`U.go(${lv}); return 0;`); await sleep(400); await shot('niveau-' + lv);
     const f = await fill(); if (f.n !== (lv === 1 ? 5 : 12) || f.part < f.w * .9 || f.h < 300) throw new Error('la grille ne remplit pas le cadre : ' + JSON.stringify(f));
   }
-  await U(`U.solve(); return 0;`); await sleep(900); await shot('gagne');
+  if (await pj(`document.getElementById('gc').dataset.selfcheck`) !== 'ok') throw new Error('vérification interne');
+  await U(`U.solve(); return 0;`); await sleep(250); await shot('eau-qui-coule');
+  const mid = await U('const t = U.st(); return t.mode + "|" + (t.tick - t.wonAt) + "|" + t.flowEnd;'); if (!/^won|/.test(mid) || !(+mid.split('|')[2] > 0)) throw new Error('l’eau devait couler à la fin : ' + mid);
+  await sleep(1400); await shot('gagne');
+  // les bords reliés : un réseau qui passe par les bords se résout aussi ; le réseau du jour est le même à chaque départ
+  await pj(`(() => { const c = document.getElementById('tuWrap'); c.checked = true; c.dispatchEvent(new Event('change')); return 0; })()`); await sleep(300);
+  if (!await U('return U.st().wrap;')) throw new Error('bords reliés');
+  await shot('bords-relies'); await U(`U.solve(); return 0;`); await sleep(200); if (await U('return U.st().mode;') !== 'won') throw new Error('le réseau aux bords reliés devait se résoudre');
+  await pj(`(() => { const c = document.getElementById('tuWrap'); c.checked = false; c.dispatchEvent(new Event('change')); return 0; })()`);
+  const day = []; for (let k = 0; k < 2; k++) { await pj(`document.getElementById('tuDaily').click(), 0`); await sleep(200); day.push(await U('const t = U.st(); return t.daily + ":" + JSON.stringify(t.sol);')); }
+  if (day[0] !== day[1] || !day[0].startsWith('true')) throw new Error('réseau du jour');
+  await U(`U.go(22); return 0;`); await sleep(200);
+  await U(`U.solve(); return 0;`); await sleep(2600);
   if (await U(`return U.st().mode;`) !== 'won') throw new Error('le niveau devait être réussi');
   await pj(`document.getElementById('tuFs').click(), 0`); await sleep(700);
   const fs = await pj(`(() => { const c = document.getElementById('gc'), r = c.getBoundingClientRect(); return document.fullscreenElement === c.parentElement && (Math.abs(r.height - innerHeight) < 3 || Math.abs(r.width - innerWidth) < 3); })()`);

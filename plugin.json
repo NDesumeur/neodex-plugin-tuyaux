@@ -1,16 +1,19 @@
 {
   "id": "neodex.tuyaux",
   "name": "Tuyaux",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "author": "NDesumeur",
-  "description": "Un jeu de réflexion : fais pivoter les tuyaux d'un clic pour amener l'eau du château d'eau, au centre, jusqu'à toutes les maisons. Réseaux sans boucle et toujours solubles, grilles de 5 × 5 à 8 × 8, jusqu'à 3 étoiles selon le nombre de coups comparé au minimum, et une option de réseaux au hasard. Bouton plein écran, la grille remplit tout le cadre, et des grilles plus grandes en avançant, jusqu'à 12 × 12.",
+  "description": "Un jeu de réflexion : fais pivoter les tuyaux d'un clic pour amener l'eau du château d'eau, au centre, jusqu'à toutes les maisons. Réseaux sans boucle et toujours solubles, grilles de 5 × 5 à 8 × 8, jusqu'à 3 étoiles selon le nombre de coups comparé au minimum, et une option de réseaux au hasard. Bouton plein écran, la grille remplit tout le cadre, et des grilles plus grandes en avançant, jusqu'à 12 × 12. L’eau coule pour de vrai à la fin ; bords reliés et réseau du jour avec série de jours.",
   "icon": "icon.png",
   "entry": "index.js",
   "view": "tuyaux",
   "neobase": ">=4.0.0",
   "type": "app",
   "category": "Jeux",
-  "compatibility": ["windows", "linux"],
+  "compatibility": [
+    "windows",
+    "linux"
+  ],
   "syncMode": "aucune",
   "syncInfo": "Rien n'est synchronisé : tes records restent sur cet appareil.",
   "mobile": false,
