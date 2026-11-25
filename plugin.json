@@ -1,7 +1,7 @@
 {
   "id": "neodex.tuyaux",
   "name": "Tuyaux",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "NDesumeur",
   "description": "Un jeu de réflexion : fais pivoter les tuyaux d'un clic pour amener l'eau du château d'eau, au centre, jusqu'à toutes les maisons. Réseaux sans boucle et toujours solubles, grilles de 5 × 5 à 8 × 8, jusqu'à 3 étoiles selon le nombre de coups comparé au minimum, et une option de réseaux au hasard. Bouton plein écran, la grille remplit tout le cadre, et des grilles plus grandes en avançant, jusqu'à 12 × 12. L’eau coule pour de vrai à la fin ; bords reliés et réseau du jour avec série de jours.",
   "icon": "icon.png",
@@ -22,5 +22,52 @@
   "sdk": "2.1.0",
   "permissions": [
     "storage"
+  ],
+  "succes": [
+    {
+      "id": "premier",
+      "nom": "L'eau coule",
+      "texte": "Finir un premier réseau"
+    },
+    {
+      "id": "n10",
+      "nom": "Plombier",
+      "texte": "Atteindre le niveau 10"
+    },
+    {
+      "id": "n25",
+      "nom": "Maître fontainier",
+      "texte": "Atteindre le niveau 25"
+    },
+    {
+      "id": "n50",
+      "nom": "Tout le village",
+      "texte": "Atteindre le niveau 50",
+      "cache": true
+    },
+    {
+      "id": "etoiles",
+      "nom": "Pas un coup de trop",
+      "texte": "Gagner 100 étoiles"
+    },
+    {
+      "id": "jour7",
+      "nom": "Une semaine d'eau",
+      "texte": "Finir le réseau du jour 7 jours de suite"
+    }
+  ],
+  "records": [
+    {
+      "id": "niveau",
+      "nom": "Niveau le plus loin",
+      "sens": "haut",
+      "format": "nombre"
+    },
+    {
+      "id": "etoiles",
+      "nom": "Étoiles",
+      "sens": "haut",
+      "format": "nombre"
+    }
   ]
 }

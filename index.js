@@ -301,6 +301,9 @@ export default async function (ctx) {
   const saveGames = () => { clearTimeout(gamesTimer); gamesTimer = setTimeout(() => { gamesTimer = null; folder.write('games', games).catch(() => {}); }, 500); };
   const best = (k, v) => { const b = games.best[k]; if (b == null || v > b) { games.best[k] = v; saveGames(); return true; } return false; };
   const gstore = (k, init) => (games[k] ??= init);
+  // les trophées de NeoDex (3.4.8 et plus) : succès et records déclarés dans plugin.json ; sur un NeoDex plus ancien, rien ne se passe
+  const trophy = id => { ctx.games?.unlock(id).catch(() => {}); };
+  const trophyRecord = (id, v) => { if (v != null && Number.isFinite(+v)) ctx.games?.record(id, +v).catch(() => {}); };
 function gameLoop(st, appKey, update, draw) {
   cancelAnimationFrame(st.raf);
   const STEP = 1000 / 60; let acc = 0, last = performance.now();
@@ -418,7 +421,8 @@ const tuCell = e => { const [x, y] = cpos(e), [ox, oy] = tuOff(), cx = Math.floo
 cv.oncontextmenu = e => e.preventDefault();
 cv.onpointermove = e => { if (tu) tu.hover = tuCell(e); };
 cv.onpointerdown = e => { e.preventDefault(); if (!tu) return; if (tu.mode === 'won') { if (tu.tick - tu.wonAt > (tu.flowEnd || 0) + 30) tuNew(tu.daily ? tus.level : tus.level + 1); return; } const c = tuCell(e); if (c) tuTurn(c[0], c[1], e.button === 2); };
-function tuInfo() { const d = tus.daily; showStats([['Niveau', tus.level + (tu ? ' (' + tu.n + ' × ' + tu.n + ')' : '')], ['Niveau le plus loin', tus.top], ['Étoiles', tus.stars], ['Niveaux finis', tus.games], ['Réseau du jour', d.last === tuDay() ? 'fait ✓' : 'à faire'], ['Série de jours', (d.last === tuDay() || d.last === tuDay(1) ? d.streak : 0) + ' (record ' + d.best + ')']]); }
+function tuInfo() {
+  setTimeout(tuTrophies); const d = tus.daily; showStats([['Niveau', tus.level + (tu ? ' (' + tu.n + ' × ' + tu.n + ')' : '')], ['Niveau le plus loin', tus.top], ['Étoiles', tus.stars], ['Niveaux finis', tus.games], ['Réseau du jour', d.last === tuDay() ? 'fait ✓' : 'à faire'], ['Série de jours', (d.last === tuDay() || d.last === tuDay(1) ? d.streak : 0) + ' (record ' + d.best + ')']]); }
 $('tuWrap').checked = !!tus.wrap; $('tuWrap').onchange = () => { tus.wrap = $('tuWrap').checked; saveGames(); tuNew(tus.level); $('tuWrap').blur(); };
 $('tuDaily').onclick = () => { tuNew(tus.level, true); $('tuDaily').blur(); };
 $('tuPrev').onclick = () => { if (tus.level > 1) tuNew(tus.level - 1); $('tuPrev').blur(); };
@@ -436,6 +440,13 @@ $('tuRnd').checked = !!tus.rnd; $('tuRnd').onchange = () => { tus.rnd = $('tuRnd
 }
 cv.__tu = {st: () => tu, go: lv => tuNew(lv), solve: () => { tu.m = tu.sol.map(r => [...r]); tu.m[0][0] = rot(rot(rot(tu.m[0][0]))); tuTurn(0, 0, false); }};  // pour le test « local »
 $('tuFs').onclick = () => { $('tuFs').blur(); try { document.fullscreenElement ? document.exitFullscreen() : cv.parentElement.requestFullscreen?.().catch(() => {}); } catch {} };
+// les trophées, tirés des statistiques et des records gardés (aussi à l'ouverture : ce qui a été fait avant compte)
+function tuTrophies() {
+  const sig = [tus.top, tus.stars, tus.games, tus.daily.best].join(); if (sig === tuTrophies.sig) return; tuTrophies.sig = sig;
+  trophyRecord('niveau', tus.games ? tus.top : null); trophyRecord('etoiles', tus.stars || null);
+  if (tus.games >= 1) trophy('premier'); if (tus.top >= 10) trophy('n10'); if (tus.top >= 25) trophy('n25'); if (tus.top >= 50) trophy('n50');
+  if (tus.stars >= 100) trophy('etoiles'); if (tus.daily.best >= 7) trophy('jour7');
+}
 ctx.onOpen(() => { if (!tu) tuNew(); gameLoop(tu, 'tuyaux', () => {}, tuDraw); tuInfo(); });
 
 }
